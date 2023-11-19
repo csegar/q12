@@ -1169,9 +1169,9 @@ server <- (function(input, output, session){
         ### Below, question numbers correspond to questions as listed at:
         ### https://docs.google.com/spreadsheets/d/1A9x00WhdQccfwa3XolplvPtjBYgd32k-qEpDpFVfddo/edit#gid=0
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q1 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 1 of 14...", footer=NULL))
         question <- 1
@@ -1201,27 +1201,51 @@ server <- (function(input, output, session){
           complete(Race, Gender, datatype, fill = list(proportion = 0)) %>%
           mutate(datatype = factor(datatype)) %>%
           mutate(datatype = relevel(datatype, ref = "Policing Records"))
+    
+        subtitle_val <- "Overall Incidents"
         
+        # Calculate the maximum proportion value to set the y-axis scale
+        max_values <- qdata %>%
+          group_by(Gender) %>%
+          summarise(max_value = max(proportion))
+        
+        # Set up vertical lines to distinguish the racial groups
+        vertical_lines_data <- qdata %>%
+          distinct(Race)
+        
+        #Format the plot area
         p <- qdata %>%
-          ggplot(aes(x = Gender, y = Race, size = proportion, fill = datatype, group = datatype, alpha = datatype)) +
-          geom_point(shape = 21, stroke = 0.6, color = "black") +
-          scale_size(range = c(1,20)) +
-          scale_fill_manual(values = c("red","gray30")) +
-          scale_alpha_manual(values = c(0.7, 0.9)) +
-          ylab("Race") +
-          scale_x_discrete(name = "Gender", position = "top") +
-          scale_y_discrete(limits = rev) +
-          guides(fill = guide_legend(title = NULL, override.aes = list(size = 4), label.position = "bottom"), size = "none", group = "none", alpha = "none") +
+          ggplot(aes(x = Race, y = proportion, fill = datatype)) +
+          geom_bar(stat = "identity", position = "dodge", color = "black") +
+          geom_vline(data = vertical_lines_data, aes(xintercept = as.numeric(Race) + 0.5), linetype = "dashed", color = "gray") + 
+          scale_fill_manual(values = c("blue", "orange")) +
+          ylab("Proportion") +
+          scale_x_discrete(name = "Race", label = element_text(size = 12)) +
+          scale_y_continuous(labels = scales::number_format(scale = 1, accuracy = 0.01), limits = c(0, max(max_values$max_value))) + 
+          guides(fill = guide_legend(title = NULL, override.aes = list(size = 6), label.position = "bottom")) +
+          ggtitle("Policing Incidents Grouped by Race and Gender", element_text(size = 16)) +
+          labs(subtitle=subtitle_val, caption = "") +                    #subtitle
+          facet_wrap(~Gender, scales = "free_y", ncol = 1) +
           theme_bw() +
-          theme(legend.text=element_text(size=8), legend.position = "bottom", legend.direction = "horizontal", legend.box = "horizontal", legend.key = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-        
+          theme(
+            legend.text = element_text(size = 10),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.box = "horizontal",
+            legend.key = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+            axis.text.y = element_text(size = 10),
+            strip.text = element_text(size = 10) 
+            )
+       
         globalVars$p1 <- p
         
         qExcel <- qdata %>%
           pivot_wider(names_from = c("Gender","datatype"), values_from = "proportion") 
         
         globalVars$t1 <- qExcel
-        
         
         writeData(wb, sheet = question, x = qExcel, startRow = 2, borderStyle = openxlsx_getOp("borderStyle", "none"), headerStyle = NULL)
         deleteData(wb, sheet = question, cols = 1, rows = 2)
@@ -1252,9 +1276,9 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q2 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 2 of 14...", footer=NULL))
         question <- 2
@@ -1287,19 +1311,45 @@ server <- (function(input, output, session){
           complete(Race, Gender, datatype, fill = list(proportion = 0)) %>%
           mutate(datatype = factor(datatype)) %>%
           mutate(datatype = relevel(datatype, ref = "Policing Records"))
+     
+        #Subtitle for this specific question
+        subtitle_val <- "Traffic Stops and Moving Violations"
         
+        # Calculate the maximum proportion value to set the y-axis scale
+        max_values <- qdata %>%
+          group_by(Gender) %>%
+          summarise(max_value = max(proportion))
+        
+        # Set up vertical lines to distinguish the racial groups
+        vertical_lines_data <- qdata %>%
+          distinct(Race)
+        
+        #Format the plot area
         p <- qdata %>%
-          ggplot(aes(x = Gender, y = Race, size = proportion, fill = datatype, group = datatype, alpha = datatype)) +
-          geom_point(shape = 21, stroke = 0.6, color = "black") +
-          scale_size(range = c(1,20)) +
-          scale_fill_manual(values = c("red","gray30")) +
-          scale_alpha_manual(values = c(0.7, 0.9)) +
-          ylab("Race") +
-          scale_x_discrete(name = "Gender", position = "top") +
-          scale_y_discrete(limits = rev) +
-          guides(fill = guide_legend(title = NULL, override.aes = list(size = 4), label.position = "bottom"), size = "none", group = "none", alpha = "none") +
+          ggplot(aes(x = Race, y = proportion, fill = datatype)) +
+          geom_bar(stat = "identity", position = "dodge", color = "black") +
+          geom_vline(data = vertical_lines_data, aes(xintercept = as.numeric(Race) + 0.5), linetype = "dashed", color = "gray") + 
+          scale_fill_manual(values = c("blue", "orange")) +
+          ylab("Proportion") +
+          scale_x_discrete(name = "Race", label = element_text(size = 12)) +
+          scale_y_continuous(labels = scales::number_format(scale = 1, accuracy = 0.01), limits = c(0, max(max_values$max_value))) + 
+          guides(fill = guide_legend(title = NULL, override.aes = list(size = 6), label.position = "bottom")) +
+          ggtitle("Policing Incidents Grouped by Race and Gender", element_text(size = 16)) +
+          labs(subtitle=subtitle_val, caption = "") +                    #subtitle
+          facet_wrap(~Gender, scales = "free_y", ncol = 1) +
           theme_bw() +
-          theme(legend.text=element_text(size=8), legend.position = "bottom", legend.direction = "horizontal", legend.box = "horizontal", legend.key = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+          theme(
+            legend.text = element_text(size = 10),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.box = "horizontal",
+            legend.key = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+            axis.text.y = element_text(size = 10),
+            strip.text = element_text(size = 10) 
+          )
         
         globalVars$p2 <- p
         
@@ -1337,9 +1387,9 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q3 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 3 of 14...", footer=NULL))
         question <- 3
@@ -1370,19 +1420,45 @@ server <- (function(input, output, session){
           complete(Race, Gender, datatype, fill = list(proportion = 0)) %>%
           mutate(datatype = factor(datatype)) %>%
           mutate(datatype = relevel(datatype, ref = "Policing Records"))
+       
+        #Subtitle for this specific question
+        subtitle_val <- "Drug and/or Firearm Possession"
         
+        # Calculate the maximum proportion value to set the y-axis scale
+        max_values <- qdata %>%
+          group_by(Gender) %>%
+          summarise(max_value = max(proportion))
+        
+        # Set up vertical lines to distinguish the racial groups
+        vertical_lines_data <- qdata %>%
+          distinct(Race)
+        
+        #Format the plot area
         p <- qdata %>%
-          ggplot(aes(x = Gender, y = Race, size = proportion, fill = datatype, group = datatype, alpha = datatype)) +
-          geom_point(shape = 21, stroke = 0.6, color = "black") +
-          scale_size(range = c(1,20)) +
-          scale_fill_manual(values = c("red","gray30")) +
-          scale_alpha_manual(values = c(0.7, 0.9)) +
-          ylab("Race") +
-          scale_x_discrete(name = "Gender", position = "top") +
-          scale_y_discrete(limits = rev) +
-          guides(fill = guide_legend(title = NULL, override.aes = list(size = 4), label.position = "bottom"), size = "none", group = "none", alpha = "none") +
+          ggplot(aes(x = Race, y = proportion, fill = datatype)) +
+          geom_bar(stat = "identity", position = "dodge", color = "black") +
+          geom_vline(data = vertical_lines_data, aes(xintercept = as.numeric(Race) + 0.5), linetype = "dashed", color = "gray") + 
+          scale_fill_manual(values = c("blue", "orange")) +
+          ylab("Proportion") +
+          scale_x_discrete(name = "Race", label = element_text(size = 12)) +
+          scale_y_continuous(labels = scales::number_format(scale = 1, accuracy = 0.01), limits = c(0, max(max_values$max_value))) + 
+          guides(fill = guide_legend(title = NULL, override.aes = list(size = 6), label.position = "bottom")) +
+          ggtitle("Policing Incidents Grouped by Race and Gender", element_text(size = 16)) +
+          labs(subtitle=subtitle_val, caption = "") +                    #subtitle
+          facet_wrap(~Gender, scales = "free_y", ncol = 1) +
           theme_bw() +
-          theme(legend.text=element_text(size=8), legend.position = "bottom", legend.direction = "horizontal", legend.box = "horizontal", legend.key = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+          theme(
+            legend.text = element_text(size = 10),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.box = "horizontal",
+            legend.key = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+            axis.text.y = element_text(size = 10),
+            strip.text = element_text(size = 10) 
+          )
         
         globalVars$p3 <- p
         
@@ -1420,9 +1496,9 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q4 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 4 of 14...", footer=NULL))
         question <- 4
@@ -1453,19 +1529,45 @@ server <- (function(input, output, session){
           complete(Race, Gender, datatype, fill = list(proportion = 0)) %>%
           mutate(datatype = factor(datatype)) %>%
           mutate(datatype = relevel(datatype, ref = "Policing Records"))
+  
+        #Subtitle for this specific question
+        subtitle_val <- "Quality of Life Violations"
         
+        # Calculate the maximum proportion value to set the y-axis scale
+        max_values <- qdata %>%
+          group_by(Gender) %>%
+          summarise(max_value = max(proportion))
+        
+        # Set up vertical lines to distinguish the racial groups
+        vertical_lines_data <- qdata %>%
+          distinct(Race)
+        
+        #Format the plot area
         p <- qdata %>%
-          ggplot(aes(x = Gender, y = Race, size = proportion, fill = datatype, group = datatype, alpha = datatype)) +
-          geom_point(shape = 21, stroke = 0.6, color = "black") +
-          scale_size(range = c(1,20)) +
-          scale_fill_manual(values = c("red","gray30")) +
-          scale_alpha_manual(values = c(0.7, 0.9)) +
-          ylab("Race") +
-          scale_x_discrete(name = "Gender", position = "top") +
-          scale_y_discrete(limits = rev) +
-          guides(fill = guide_legend(title = NULL, override.aes = list(size = 4), label.position = "bottom"), size = "none", group = "none", alpha = "none") +
+          ggplot(aes(x = Race, y = proportion, fill = datatype)) +
+          geom_bar(stat = "identity", position = "dodge", color = "black") +
+          geom_vline(data = vertical_lines_data, aes(xintercept = as.numeric(Race) + 0.5), linetype = "dashed", color = "gray") + 
+          scale_fill_manual(values = c("blue", "orange")) +
+          ylab("Proportion") +
+          scale_x_discrete(name = "Race", label = element_text(size = 12)) +
+          scale_y_continuous(labels = scales::number_format(scale = 1, accuracy = 0.01), limits = c(0, max(max_values$max_value))) + 
+          guides(fill = guide_legend(title = NULL, override.aes = list(size = 6), label.position = "bottom")) +
+          ggtitle("Policing Incidents Grouped by Race and Gender", element_text(size = 16)) +
+          labs(subtitle=subtitle_val, caption = "") +                    #subtitle
+          facet_wrap(~Gender, scales = "free_y", ncol = 1) +
           theme_bw() +
-          theme(legend.text=element_text(size=8), legend.position = "bottom", legend.direction = "horizontal", legend.box = "horizontal", legend.key = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+          theme(
+            legend.text = element_text(size = 10),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.box = "horizontal",
+            legend.key = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+            axis.text.y = element_text(size = 10),
+            strip.text = element_text(size = 10) 
+          )
         
         globalVars$p4 <- p
         
@@ -1503,9 +1605,9 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q5 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 5 of 14...", footer=NULL))
         question <- 5
@@ -1537,20 +1639,46 @@ server <- (function(input, output, session){
           complete(Race, Gender, datatype, fill = list(proportion = 0)) %>%
           mutate(datatype = factor(datatype)) %>%
           mutate(datatype = relevel(datatype, ref = "Policing Records"))
+      
+        #Subtitle for this specific question
+        subtitle_val <- "Incidents Resulting in Arrest"
         
+        # Calculate the maximum proportion value to set the y-axis scale
+        max_values <- qdata %>%
+          group_by(Gender) %>%
+          summarise(max_value = max(proportion))
+        
+        # Set up vertical lines to distinguish the racial groups
+        vertical_lines_data <- qdata %>%
+          distinct(Race)
+        
+        #Format the plot area
         p <- qdata %>%
-          ggplot(aes(x = Gender, y = Race, size = proportion, fill = datatype, group = datatype, alpha = datatype)) +
-          geom_point(shape = 21, stroke = 0.6, color = "black") +
-          scale_size(range = c(1,20)) +
-          scale_fill_manual(values = c("red","gray30")) +
-          scale_alpha_manual(values = c(0.7, 0.9)) +
-          ylab("Race") +
-          scale_x_discrete(name = "Gender", position = "top") +
-          scale_y_discrete(limits = rev) +
-          guides(fill = guide_legend(title = NULL, override.aes = list(size = 4), label.position = "bottom"), size = "none", group = "none", alpha = "none") +
+          ggplot(aes(x = Race, y = proportion, fill = datatype)) +
+          geom_bar(stat = "identity", position = "dodge", color = "black") +
+          geom_vline(data = vertical_lines_data, aes(xintercept = as.numeric(Race) + 0.5), linetype = "dashed", color = "gray") + 
+          scale_fill_manual(values = c("blue", "orange")) +
+          ylab("Proportion") +
+          scale_x_discrete(name = "Race", label = element_text(size = 12)) +
+          scale_y_continuous(labels = scales::number_format(scale = 1, accuracy = 0.01), limits = c(0, max(max_values$max_value))) + 
+          guides(fill = guide_legend(title = NULL, override.aes = list(size = 6), label.position = "bottom")) +
+          ggtitle("Policing Incidents Grouped by Race and Gender", element_text(size = 16)) +
+          labs(subtitle=subtitle_val, caption = "") +                    #subtitle
+          facet_wrap(~Gender, scales = "free_y", ncol = 1) +
           theme_bw() +
-          theme(legend.text=element_text(size=8), legend.position = "bottom", legend.direction = "horizontal", legend.box = "horizontal", legend.key = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-        
+          theme(
+            legend.text = element_text(size = 10),
+            legend.position = "top",
+            legend.direction = "horizontal",
+            legend.box = "horizontal",
+            legend.key = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
+            axis.text.y = element_text(size = 10),
+            strip.text = element_text(size = 10) 
+          )
+      
         globalVars$p5 <- p
         
         qExcel <- qdata %>%
@@ -1587,15 +1715,13 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q6 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 6 of 14...", footer=NULL))
         question <- 6
-        
-        # Proportion arrests for different gender/race
-        
+         
         # Note: we treat proportions as 0 when the calculation is 0/0
         qdata <- policingdata %>%
           group_by(Race, Gender) %>%
@@ -1626,9 +1752,9 @@ server <- (function(input, output, session){
         setColWidths(wb, sheet = question, cols = 2:4, widths = 20, ignoreMergedCells = TRUE)
         addStyle(wb, sheet = question, style = centeredrounded3, rows = 3:(nrow(qExcel) + 2), cols = 2:4, gridExpand = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q7 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 7 of 14...", footer=NULL))
         question <- 7
@@ -1661,9 +1787,9 @@ server <- (function(input, output, session){
         setColWidths(wb, sheet = question, cols = 2:4, widths = 20, ignoreMergedCells = TRUE)
         addStyle(wb, sheet = question, style = centeredrounded2, rows = 3:(nrow(qExcel) + 2), cols = 2:4, gridExpand = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q8 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 8 of 14...", footer=NULL))
         question <- 8
@@ -1697,13 +1823,12 @@ server <- (function(input, output, session){
         setColWidths(wb, sheet = question, cols = 2:10, widths = 20, ignoreMergedCells = TRUE)
         addStyle(wb, sheet = question, style = centeredrounded3, rows = 3:(nrow(qExcel) + 2), cols = 2:10, gridExpand = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ##########
+        ### Q9 ###
+        ##########
         removeModal()
         showModal(modalDialog("Analyzing Question 9 of 14...", footer=NULL))
         question <- 9
-        
         
         # Racial breakdown for different officers
         # We will look at top 25% of officers or top 10 officers, whichever is a shorter list
@@ -1740,13 +1865,11 @@ server <- (function(input, output, session){
         
         globalVars$p9 <- p
         
-        
         qExcel <- qdata %>%
           select(-count) %>%
           pivot_wider(names_from = c("Race"), values_from = "proportion") 
         
         globalVars$t9 <- qExcel
-        
         
         writeData(wb, sheet = question, x = qExcel, startRow = 2, borderStyle = openxlsx_getOp("borderStyle", "none"), headerStyle = NULL)
         writeData(wb, sheet = question, startRow = 1, startCol = 2, "Race")
@@ -1756,9 +1879,9 @@ server <- (function(input, output, session){
         setColWidths(wb, sheet = question, cols = 2:10, widths = 20, ignoreMergedCells = TRUE)
         addStyle(wb, sheet = question, style = centeredrounded3, rows = 3:(nrow(qExcel) + 2), cols = 2:10, gridExpand = TRUE)
         
-        #########
-        ### Q ###
-        #########
+        ###########
+        ### Q10 ###
+        ###########
         removeModal()
         showModal(modalDialog("Analyzing Question 10 of 14...", footer=NULL))
         
@@ -1797,9 +1920,9 @@ server <- (function(input, output, session){
         addStyle(wb, sheet = question, style = centered, rows = 1:2, cols = 2:25, gridExpand = TRUE)
         addStyle(wb, sheet = question, style = centeredrounded3, rows = 3:9, cols = 2:25, gridExpand = TRUE)
         
-        #########
-        ### Q11 ###TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
-        #########
+        ###########
+        ### Q11 ### TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
+        ###########
         removeModal()
         showModal(modalDialog("Analyzing Question 11 of 14...", footer=NULL))
         question <- 11
@@ -1842,7 +1965,7 @@ server <- (function(input, output, session){
           guides(fill = guide_legend(title = NULL, override.aes = list(size = 4), label.position = "bottom"), size = "none", group = "none", alpha = "none") +
           theme_bw() +
           theme(legend.text=element_text(size=8), legend.position = "bottom", legend.direction = "horizontal", legend.box = "horizontal", legend.key = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
-        
+ 
         globalVars$p11 <- p
         
         qExcel <- qdata %>%
@@ -1883,19 +2006,14 @@ server <- (function(input, output, session){
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
         
-        #########
-        ### Q12 ###CSS WORKING -- Are subjects of specific intersectional identities stopped in street checks at higher rates?
-        #########
-        #Assumptions: Here were going to be interpretting "street checks" as the "quality of life" incidents
-        #Starting with Q4 that looked at all quality of lifepolice indcidents for different gender/race groups filtering to quality of life 
-        #
-        
-        #Q1 - What proportion of all police incidents go to different gender/race groups?
+        ###########
+        ### Q12 ### TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
+        ###########
+      
         removeModal()
         showModal(modalDialog("Analyzing Question 12 of 14...", footer=NULL))
         question <- 12
         
-        #Our data, grouped by race and gender
         observed <- policingdata %>%
           group_by(Race, Gender) %>%
           summarise(people = n()) %>%
@@ -1905,17 +2023,14 @@ server <- (function(input, output, session){
           filter(Gender != "Missing gender data") %>%
           arrange(Race, Gender)
         
-        #Census data for population grouped by race and gender
         expected <- acsracegender %>%
           complete(Race, Gender, fill = list(proportion = 0)) %>%
           filter(Race != "Missing race data") %>%
           filter(Gender != "Missing gender data") %>%
           arrange(Race, Gender)
         
-        #Comparison of observed police stops compared to census population
         chisq <- chisq.test(x = observed$people, p = expected$proportion, simulate.p.value = TRUE)
         
-        #
         qdata <- observed %>%
           mutate(proportion = prop.table(people)) %>%
           select(-people) %>%
@@ -1977,9 +2092,10 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q13 ###TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
-        #########
+        
+        ###########
+        ### Q13 ### TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
+        ###########
         removeModal()
         showModal(modalDialog("Analyzing Question 13 of 14...", footer=NULL))
         question <- 13
@@ -2062,9 +2178,9 @@ server <- (function(input, output, session){
         }
         setColWidths(wb, sheet = question, cols = 1, widths = "auto", ignoreMergedCells = TRUE)
         
-        #########
-        ### Q14 ###TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
-        #########
+        ###########
+        ### Q14 ### TEMPORARILY FILLED WITH Q1 DATA TO ALLOW CODE TO RUN
+        ###########
         removeModal()
         showModal(modalDialog("Analyzing Question 14 of 14...", footer=NULL))
         question <- 14
